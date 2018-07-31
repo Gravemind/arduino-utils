@@ -2,6 +2,13 @@
 
 #include <stdint.h>
 
+// Simpler and smaller DHT22 reader.
+
+// Links:
+// - http://akizukidenshi.com/download/ds/aosong/AM2302.pdf
+// - https://github.com/winlinvip/SimpleDHT/blob/master/SimpleDHT.cpp
+// - https://github.com/adafruit/DHT-sensor-library/blob/master/DHT.cpp
+
 class SimplerDHT22 {
 public:
 	enum {
