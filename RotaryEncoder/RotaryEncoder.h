@@ -10,10 +10,10 @@
 // (as-in "as fast as a human would want to rotate a rotary encoder")
 //
 // Internally, each pin change history is recorded in a single byte using a few
-// simple bitwise operations. Then it looks for the full "encoded rotation
+// simple bitwise operations. Then it looks for the full "rotation step encoded
 // pattern" on both pins, so "half-steps" and "slow-stepping" should be handled
-// properly. It can debounce some contact bouncing. And tries to resolve "very
-// fast rotation" ambiguities (both pins changing at same time).
+// properly. It can also debounce some contact bouncing. And tries to resolve
+// "very fast rotation" ambiguities (both pins changing at same time).
 //
 
 // Enable the code that tries to handle contact bouncing
@@ -88,19 +88,19 @@ void	RotaryEncoder::update(bool pina, bool pinb)
 		IF_DEBUG_ROTARY_ENCODER(++_both;)
 
 		uint8_t	prev_prev_pinb = ((_pinb_hist >> 1) & 1);
-		if (prev_pinb != prev_prev_pinb) // if last changed is pinb, record pina change first
+		if (prev_pinb != prev_prev_pinb) // if the last change was pinb, record pina change first
 		{
 			_pina_hist <<= 1;
 			_pina_hist |= pina;
 			_pinb_hist <<= 1;
-			_pinb_hist |= prev_pinb;
+			_pinb_hist |= prev_pinb; // (re-record same value)
 		}
 		else // and vice versa
 		{
 			_pinb_hist <<= 1;
 			_pinb_hist |= pinb;
 			_pina_hist <<= 1;
-			_pina_hist |= prev_pina;
+			_pina_hist |= prev_pina; // (re-record same value)
 		}
 
 #if (ROTARY_ENCODER_DEBOUNCE != 0)
@@ -153,7 +153,7 @@ void	RotaryEncoder::update(bool pina, bool pinb)
 		{
 			IF_DEBUG_ROTARY_ENCODER(++_bounce;)
 			// remove last 2 states from history
-			// (signed to arithmetic shift to repeat last state)
+			// (signed arithmetic shift to repeat the last bit/state)
 			reinterpret_cast<ihist_t&>(_pina_hist) >>= 2;
 			reinterpret_cast<ihist_t&>(_pinb_hist) >>= 2;
 		}
