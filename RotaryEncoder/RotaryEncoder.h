@@ -58,14 +58,15 @@ public:
 	uhist_t		pinbHistoryBits() const { return _pinb_hist; }
 
 	IF_DEBUG_ROTARY_ENCODER(
-		// Number of times both pins changed at same time ("very fast rotation")
-		uint8_t	_both = 0;
-		// Number of times rotation was detected during a "very fast rotation"
-		uint8_t	_incb = 0;
+		// Number of times "fast rotation" was detected (both pins changed at same ping)
+		uint8_t	_fast = 0;
+		// Number of times value was incremented during "fast rotation"
+		uint8_t	_inc_fast = 0;	// at 1st change
+		uint8_t	_inc_fast2 = 0; // at 2nd change
 		// Number of times bouncing was detected during normal operation
 		uint8_t	_bounce = 0;
-		// Number of times bouncing was detected during "very fast rotation"
-		uint8_t	_bounceb = 0;
+		// Number of times bouncing was detected during "fast rotation"
+		uint8_t	_bounce_fast = 0;
 	)
 
 private:
@@ -84,9 +85,10 @@ void	RotaryEncoder::update(bool pina, bool pinb)
 	// if both pins changed at same time ("very fast rotation")
 	// fake a change with only 1 pin change at a time
 	bool	fast_rot = (pina != prev_pina && pinb != prev_pinb);
+	IF_DEBUG_ROTARY_ENCODER(bool debug_fast = fast_rot;)
 	if (fast_rot)
 	{
-		IF_DEBUG_ROTARY_ENCODER(++_both;)
+		IF_DEBUG_ROTARY_ENCODER(++_fast;)
 
 		// if the last change was pinb, record pina change,
 		// and vice versa
@@ -94,16 +96,16 @@ void	RotaryEncoder::update(bool pina, bool pinb)
 		if (prev_pinb != prev_prev_pinb)
 		{
 			_pina_hist <<= 1;
-			_pina_hist |= pina;
+			_pina_hist |= uhist_t(pina);
 			_pinb_hist <<= 1;
-			_pinb_hist |= prev_pinb; // (re-record same value)
+			_pinb_hist |= uhist_t(prev_pinb); // (re-record same value)
 		}
 		else
 		{
 			_pinb_hist <<= 1;
-			_pinb_hist |= pinb;
+			_pinb_hist |= uhist_t(pinb);
 			_pina_hist <<= 1;
-			_pina_hist |= prev_pina; // (re-record same value)
+			_pina_hist |= uhist_t(prev_pina); // (re-record same value)
 		}
 
 		// Go check this first change
@@ -133,7 +135,7 @@ void	RotaryEncoder::update(bool pina, bool pinb)
 		if (((last_3_pina == 0b000) && (last_3_pinb == 0b010)) ||
 			((last_3_pinb == 0b000) && (last_3_pina == 0b010)))
 		{
-			IF_DEBUG_ROTARY_ENCODER(++_bounce;)
+			IF_DEBUG_ROTARY_ENCODER(if (debug_fast) ++_bounce_fast; else ++_bounce;)
 			// remove last 2 states from history
 			// (signed arithmetic shift to repeat the last bit/state)
 			reinterpret_cast<ihist_t&>(_pina_hist) >>= 2;
@@ -145,10 +147,16 @@ void	RotaryEncoder::update(bool pina, bool pinb)
 			// test for inc/dec pattern on last 5 pin states
 			if ((_pina_hist & 0b11111) == 0b10011 &&
 				(_pinb_hist & 0b11111) == 0b11001)
+			{
+				IF_DEBUG_ROTARY_ENCODER(if (debug_fast) { if (fast_rot) ++_inc_fast; else ++_inc_fast2; })
 				++_value;
+			}
 			else if ((_pinb_hist & 0b11111) == 0b10011 &&
 					 (_pina_hist & 0b11111) == 0b11001)
+			{
+				IF_DEBUG_ROTARY_ENCODER(if (debug_fast) { if (fast_rot) ++_inc_fast; else ++_inc_fast2; })
 				--_value;
+			}
 		}
 	}
 
