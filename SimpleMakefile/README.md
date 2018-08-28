@@ -1,4 +1,4 @@
-A simple Makefile calling `arduino` command line.
+A simple Makefile calling [arduino-cli](https://github.com/arduino/arduino-cli) command lines.
 
 Example for a `my-project/Makefile`:
 ```
@@ -12,8 +12,15 @@ include /path/to/simple_arduino.make
 
 Usage `my-project` example:
 ```
-$> export ARDUINO_PORT=/dev/ttyACM1
 $> make info        # prints build variables
-$> make verify      # builds/verifies project
-$> make flash tty   # flashes/uploads then setups and open the ARDUINO_PORT serial tty (read-only)
+...
+$> make compile     # compiles the project (aliases: make build, make verify)
+...
+$> export ARDUINO_PORT=/dev/ttyACM1
+$> make upload      # upload to ARDUINO_PORT  (aliases: make flash)
+...
+$> make tty         # setups and open the ARDUINO_PORT serial tty (read-only)
+...
 ```
+
+

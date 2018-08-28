@@ -1,5 +1,6 @@
 BOARD?=arduino:avr:uno
 
+VERBOSE?=0
 BAUD_RATE?=9600
 ADDITIONAL_STTY_FLAGS?=
 STTY_FLAGS?=-icrnl
@@ -10,40 +11,39 @@ else
 PORT?=$(error Invalid ARDUINO_PORT variable)
 endif
 
-BUILD_DIR?=$(abspath ./build)
+ARDUINO_CLI_COMPILE_FLAGS=--fqbn ${BOARD} --warnings extra
+ARDUINO_CLI_UPLOAD_FLAGS=--fqbn ${BOARD} --verify --port ${PORT}
 
-PREFS?= --pref compiler.warning_level=all
+ifeq (${VERBOSE},1)
+ARDUINO_CLI_COMPILE_FLAGS+=--verbose
+ARDUINO_CLI_UPLOAD_FLAGS+=--verbose
+endif
 
-ARDUINO_FLAGS=--verbose --board ${BOARD} --pref build.path=${BUILD_DIR} ${PREFS}
+all: compile
 
-all: verify
-
-builddir:
-#	trying to fix the ctags_target_for_gcc_minus_e.cpp error:
-	rm -rf ${BUILD_DIR}
-
-	mkdir -p ${BUILD_DIR}
+info:
+	@echo "Info:"
+	@echo "  pwd: ${shell pwd}"
+	@echo "  arduino-cli: $(shell which arduino-cli)"
+	@echo "  BOARD=${BOARD}"
+	@echo "  ARDUINO_PORT=${ARDUINO_PORT}"
+	@echo "  BAUD_RATE=${BAUD_RATE}"
+	@echo
 
 clean:
-	rm -rf ${BUILD_DIR}
+	echo "Clean not implemented !"
 
-verify: info builddir
-	arduino . --verify ${ARDUINO_FLAGS}
+compile: info
+	arduino-cli compile ${ARDUINO_CLI_COMPILE_FLAGS}
 
-upload: info builddir
-	arduino . --upload --port ${PORT} ${ARDUINO_FLAGS}
+upload: compile info
+	arduino-cli upload ${ARDUINO_CLI_UPLOAD_FLAGS}
 	sleep 0.1
 
 # aliases
-build: verify
+build: compile
+verify: compile
 flash: upload
-
-info:
-	@echo "pwd: ${shell pwd}"
-	@echo "BOARD=${BOARD}"
-	@echo "BUILD_DIR=${BUILD_DIR}"
-	@echo "ARDUINO_PORT=${ARDUINO_PORT}"
-	@echo "BAUD_RATE=${BAUD_RATE}"
 
 tty:
 #	csN : set character size to N bits, N in [5..8]
@@ -51,4 +51,4 @@ tty:
 	stty -F ${PORT} cs8 ${STTY_FLAGS} ${ADDITIONAL_STTY_FLAGS} ${BAUD_RATE}
 	cat ${PORT}
 
-.PHONY: all builddir clean verify upload flash info tty
+.PHONY: all clean compile upload build verify flash info tty
