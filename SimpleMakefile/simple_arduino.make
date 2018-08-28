@@ -11,7 +11,7 @@ else
 PORT?=$(error Invalid ARDUINO_PORT variable)
 endif
 
-ARDUINO_CLI_COMPILE_FLAGS=--fqbn ${BOARD} --warnings extra
+ARDUINO_CLI_COMPILE_FLAGS=--fqbn ${BOARD} --warnings all
 ARDUINO_CLI_UPLOAD_FLAGS=--fqbn ${BOARD} --verify --port ${PORT}
 
 ifeq (${VERBOSE},1)
