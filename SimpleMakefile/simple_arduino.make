@@ -3,7 +3,7 @@ BOARD?=arduino:avr:uno
 VERBOSE?=0
 BAUD_RATE?=9600
 ADDITIONAL_STTY_FLAGS?=
-STTY_FLAGS?=-icrnl
+STTY_FLAGS?=-icrnl -hup
 #PORT?=/dev/ttyACM*
 
 ifneq ("$(wildcard ${PORT})","")
