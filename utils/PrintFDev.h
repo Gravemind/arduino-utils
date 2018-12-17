@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdio.h>
+
 //
 // PrintFDevRef instances can be passed to stream write functions (via cast-opt
 // to FILE*) to output on `_Parent *parent` (usually a `Print` class).
@@ -10,7 +12,7 @@
 class PrintFDevRef
 {
 public:
-
+#if defined(__AVR__)
 	template <typename _Parent>
 	PrintFDevRef(_Parent *parent)
 	{
@@ -30,8 +32,34 @@ public:
 
 	FILE		*stream() { return &_stream; }
 	operator	FILE*() { return &_stream; }
-
 	FILE		_stream;
+
+#else // GNU stdio (man fopencookie)
+
+	template <typename _Parent>
+	PrintFDevRef(_Parent *parent)
+	{
+		cookie_io_functions_t  io_funcs = {
+			// .read  = [](void *cookie, char *buf, size_t size) -> ssize_t {
+			// 			 _Parent *parent = (_Parent*)cookie;
+			// 			 return parent->readBytes(buf, size);
+			// 		 },
+			.read = nullptr,
+			.write = [](void *cookie, const char *buf, size_t size) -> ssize_t {
+						 _Parent *parent = (_Parent*)cookie;
+						 return parent->write(buf, size);
+					 },
+			.seek  = nullptr,
+			.close = nullptr
+		};
+		_stream = fopencookie(parent, "w", io_funcs);
+		setlinebuf(_stream); // if not, requires explicit fflush !?
+	}
+
+	FILE		*stream() { return _stream; }
+	operator	FILE*() { return _stream; }
+	FILE		*_stream;
+#endif
 };
 
 //
