@@ -4,11 +4,12 @@ VERBOSE?=0
 BAUD_RATE?=9600
 ADDITIONAL_STTY_FLAGS?=
 STTY_FLAGS?=-icrnl
+#PORT?=/dev/ttyACM*
 
-ifneq ("$(wildcard ${ARDUINO_PORT})","")
-PORT?=${ARDUINO_PORT}
+ifneq ("$(wildcard ${PORT})","")
+	override PORT:=$(realpath $(wildcard ${PORT}))
 else
-PORT?=$(error Invalid ARDUINO_PORT variable)
+	override PORT:=$(error Invalid PORT env, no such file: ${PORT})
 endif
 
 ARDUINO_CLI_COMPILE_FLAGS=--fqbn ${BOARD} --warnings all

@@ -7,6 +7,9 @@ BOARD=arduino:avr:nano
 # do not send reset
 ADDITIONAL_STTY_FLAGS+=-hup
 
+# resolved by wildcard
+PORT?=/dev/serial/by-id/usb-*Serial*
+
 include /path/to/simple_arduino.make
 ```
 
